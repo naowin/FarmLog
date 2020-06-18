@@ -1,4 +1,4 @@
-﻿local VERSION = "1.20"
+local VERSION = "1.20"
 local VERSION_INT = 1.2000
 local ADDON_NAME = "FarmLog"
 local CREDITS = "by |cff40C7EBKof|r @ |cffff2222Shazzrah|r"
@@ -837,12 +837,21 @@ function FarmLog:GetLastInstance(name)
 	end 
 end 
 
-function FarmLog:RepushInstance(index)
+function FarmLog:GetLast24HInstance(name)
+	for i, meta in ipairs(FLogGlobalVars.instancesLast24H[REALM]) do 
+		if meta.name == name then 
+			return meta, i
+		end 
+	end 
+end 
+
+function FarmLog:RepushInstance(index, name)
 	local meta = tremove(FLogGlobalVars.instances[REALM], index)
 	tinsert(FLogGlobalVars.instances[REALM], 1, meta)
 
-	local meta24 = tremove(FLogGlobalVars.instances24H[REALM], index)
-	tinsert(FLogGlobalVars.instances24H[REALM], 1, meta)
+	local lastInstance, lastIndex = self:GetLast24HInstance(name)
+	local meta24 = tremove(FLogGlobalVars.instancesLast24H[REALM], lastIndex)
+	tinsert(FLogGlobalVars.instancesLast24H[REALM], 1, meta)
 
 	self:UpdateInstanceCount()
 end 
