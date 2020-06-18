@@ -72,6 +72,7 @@ function FarmLog_BuildLocalization(context)
     L["new-instance-title"] = "Instance Count"
     L["new-instance-question"] = "Is this a new instance ID?"
     L["instance-count-help"] = "The number of instances you've been to in the last hour"
+    L["instance-count-24H-help"] = "The number of instances you've been to in the last 24 hour"
     L["Instances"] = "Instances"
     L["Deaths"] = "Deaths"
     L["Black Lotus"] = "Black Lotus"

@@ -15,7 +15,9 @@ FarmLog.Version = VERSION
 FarmLog.AddonName = ADDON_NAME
 
 local MAX_INSTANCES_SECONDS = 3600
+local MAX_INSTANCES_SECONDS_24H = 86400 
 local MAX_INSTANCES_COUNT = 5
+local MAX_INSTANCES_COUNT_PER_24h = 30
 local INSTANCE_RESET_SECONDS = 3600
 local PURGE_LOOTED_MOBS_SECONDS = 5 * 60
 
@@ -170,6 +172,7 @@ FLogGlobalVars = {
 	showHonorFrenzyCounter = true,
 	blackLotusTimeSeconds = 3600,
 	instances = {},
+	instancesLast24H = {},
 	blt = {}, -- BL timers
 	blp = {}, -- BL pick/fail counters
 	bls = {}, -- BL pick log
@@ -580,6 +583,7 @@ function FarmLog:Migrate()
 	end 
 
 	if not FLogGlobalVars.instances then FLogGlobalVars.instances = {} end 
+	if not FLogGlobalVars.instancesLast24H then FLogGlobalVars.instancesLast24H = {} end 
 
 	if FLogVars.ver < 1.1205 then 
 		for name, session in pairs(FLogVars.sessions) do 
@@ -777,10 +781,28 @@ function FarmLog:UpdateInstanceCount()
 		FarmLog_MainWindow_Buttons_Instances:SetBackdropBorderColor(1, 0, 0, 0.6)
 		FarmLog_MainWindow_Buttons_Instances_Text:SetTextColor(1, 0, 0, 1)
 	end
+
+	local instanceCount = #FLogGlobalVars.instancesLast24H[REALM]
+	if instanceCount <= 10 then 
+		FarmLog_MainWindow_Buttons_Instances24H:SetBackdropBorderColor(0, 1, 0, 0.6)
+		FarmLog_MainWindow_Buttons_Instances24H_Text:SetTextColor(0, 1, 0, 1)
+	elseif instanceCount  <= 20 then 
+		FarmLog_MainWindow_Buttons_Instances24H:SetBackdropBorderColor(1, 1, 0, 0.6)
+		FarmLog_MainWindow_Buttons_Instances24H_Text:SetTextColor(1, 1, 0, 1)
+	else
+		FarmLog_MainWindow_Buttons_Instances24H:SetBackdropBorderColor(1, 0, 0, 0.6)
+		FarmLog_MainWindow_Buttons_Instances24H_Text:SetTextColor(1, 0, 0, 1)
+	end
+	FarmLog_MainWindow_Buttons_Instances24H_Text:SetText(instanceCount)
 end 
 
 function FarmLog:AddInstance(name, enterTime)
 	tinsert(FLogGlobalVars.instances[REALM], 1, {
+		["name"] = name,
+		["enter"] = enterTime or time(),
+		["player"] = GetUnitName("player"),
+	})
+	tinsert(FLogGlobalVars.instancesLast24H[REALM], 1, {
 		["name"] = name,
 		["enter"] = enterTime or time(),
 		["player"] = GetUnitName("player"),
@@ -798,6 +820,13 @@ function FarmLog:PurgeInstances()
 		tinsert(newtable, meta)
 	end 
 	FLogGlobalVars.instances[REALM] = newtable
+
+	local new24htable = {}
+	for i, meta in ipairs(FLogGlobalVars.instancesLast24H[REALM]) do 
+		if meta.leave and now - meta.leave >= MAX_INSTANCES_SECONDS_24H then break end 
+		tinsert(new24htable, meta)
+	end 
+	FLogGlobalVars.instancesLast24H[REALM] = new24htable
 end 
 
 function FarmLog:GetLastInstance(name)
@@ -811,6 +840,10 @@ end
 function FarmLog:RepushInstance(index)
 	local meta = tremove(FLogGlobalVars.instances[REALM], index)
 	tinsert(FLogGlobalVars.instances[REALM], 1, meta)
+
+	local meta24 = tremove(FLogGlobalVars.instances24H[REALM], index)
+	tinsert(FLogGlobalVars.instances24H[REALM], 1, meta)
+
 	self:UpdateInstanceCount()
 end 
 
@@ -2236,6 +2269,7 @@ function FarmLog:OnAddonLoaded()
 	if not FLogGlobalVars.ahScan[REALM] then FLogGlobalVars.ahScan[REALM] = {} end 
 	if not FLogGlobalVars.ahPrice[REALM] then FLogGlobalVars.ahPrice[REALM] = {} end 
 	if not FLogGlobalVars.instances[REALM] then FLogGlobalVars.instances[REALM] = {} end 
+	if not FLogGlobalVars.instancesLast24H[REALM] then FLogGlobalVars.instancesLast24H[REALM] = {} end 
 	if not FLogGlobalVars.blt[REALM] then FLogGlobalVars.blt[REALM] = {} end 
 	if not FLogGlobalVars.bls[REALM] then FLogGlobalVars.bls[REALM] = {} end 
 
@@ -2397,7 +2431,7 @@ function FarmLog:OnEnteringWorld(isInitialLogin, isReload)
 					end, function () 
 						-- no
 						lastInstance.leave = nil 
-						FarmLog:RepushInstance(lastIndex)
+						FarmLog:RepushInstance(lastIndex, instanceName)
 					end)
 				end 
 			end
@@ -3194,6 +3228,15 @@ function FarmLog_MainWindow_Buttons_Instances:MouseLeave()
 	GameTooltip_Hide();
 end 
 
+function FarmLog_MainWindow_Buttons_Instances24H:MouseEnter()
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+	GameTooltip:SetText(L["instance-count-24H-help"])
+	GameTooltip:Show()
+end 
+
+function FarmLog_MainWindow_Buttons_Instances24H:MouseLeave()
+	GameTooltip_Hide();
+end 
 
 -- Honor frenzy counter
 

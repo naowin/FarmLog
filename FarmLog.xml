@@ -1194,6 +1194,50 @@
             </Scripts>
           </Frame>          <!--$parent_Instances-->
 
+          <Frame name="$parent_Instances24H">
+            <Size>
+              <AbsDimension x="20" y="14"/>
+            </Size>
+            <Backdrop bgFile="Interface/Buttons/WHITE8X8" edgeFile="Interface/Buttons/WHITE8X8" tile="true">
+              <EdgeSize>
+                <AbsValue val="1"></AbsValue>
+              </EdgeSize>
+              <TileSize>
+                <AbsValue val="16" />
+              </TileSize>
+            </Backdrop>
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parent_Instances" relativePoint="TOPRIGHT">
+                <Offset>
+                  <AbsDimension x="3" y="0"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Layers>
+              <Layer level="ARTWORK">
+                <FontString name="$parent_Text" inherits="ChatFontNormal" font="FarmLogSmallFont" text="I">
+                  <Color r="1" g="1" b="1"/>
+                  <Anchors>
+                    <Anchor point="CENTER" />
+                  </Anchors>
+                </FontString>
+              </Layer>
+            </Layers>
+            <Scripts>
+              <OnLoad>
+                self:SetBackdropColor(0, 0, 0, 0.4)
+                self:SetBackdropBorderColor(1, 1, 1, 0.1)
+                FarmLog_MainWindow_Buttons_Instances24H_Text:SetTextColor(0.8, 0.8, 0.8, 1)
+              </OnLoad>
+              <OnEnter>
+                self:MouseEnter()
+              </OnEnter>
+              <OnLeave>
+                self:MouseLeave()
+              </OnLeave>
+            </Scripts>
+          </Frame>          <!--$parent_Instances24H-->
+
         </Frames>
       </Frame>      <!--$parent_Buttons-->
 
